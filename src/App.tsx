@@ -27,9 +27,9 @@ const App = () => (
           <ListingsProvider>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/listings" element={<Listings />} />
-              <Route path="/property/:id" element={<PropertyDetail />} />
-              <Route path="/dashboard" element={<LandlordDashboard />} />
+              <Route path="/listings" element={<ProtectedRoute><Listings /></ProtectedRoute>} />
+              <Route path="/property/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><LandlordDashboard /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />

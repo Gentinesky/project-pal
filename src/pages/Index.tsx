@@ -86,22 +86,34 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Listings */}
-      <section className="bg-secondary/30 py-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 flex items-end justify-between">
-            <h2 className="font-display text-3xl font-bold">Featured Listings</h2>
-            <Link to="/listings" className="text-sm font-medium text-primary hover:underline">
-              View all →
-            </Link>
+      {/* Featured Listings — only for logged-in users */}
+      {isLoggedIn ? (
+        <section className="bg-secondary/30 py-16">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 flex items-end justify-between">
+              <h2 className="font-display text-3xl font-bold">Featured Listings</h2>
+              <Link to="/listings" className="text-sm font-medium text-primary hover:underline">
+                View all →
+              </Link>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((p) => (
+                <PropertyCard key={p.id} property={p} />
+              ))}
+            </div>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((p) => (
-              <PropertyCard key={p.id} property={p} />
-            ))}
+        </section>
+      ) : (
+        <section className="bg-secondary/30 py-16">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="mb-4 font-display text-3xl font-bold">Ready to Find Your Home?</h2>
+            <p className="mb-6 text-muted-foreground">Create a free account to browse all verified listings.</p>
+            <Button asChild size="lg">
+              <Link to="/signup">Get Started</Link>
+            </Button>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <Footer />
     </div>
