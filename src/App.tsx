@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ListingsProvider } from "@/contexts/ListingsContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Listings from "./pages/Listings";
 import PropertyDetail from "./pages/PropertyDetail";
@@ -26,9 +27,9 @@ const App = () => (
           <ListingsProvider>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/listings" element={<Listings />} />
-              <Route path="/property/:id" element={<PropertyDetail />} />
-              <Route path="/dashboard" element={<LandlordDashboard />} />
+              <Route path="/listings" element={<ProtectedRoute><Listings /></ProtectedRoute>} />
+              <Route path="/property/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><LandlordDashboard /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />

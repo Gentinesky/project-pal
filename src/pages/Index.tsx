@@ -1,14 +1,17 @@
 import { Link } from "react-router-dom";
-import { Search, MapPin, Shield, Clock } from "lucide-react";
+import { Search, MapPin, Shield, Clock, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
-import { properties } from "@/data/properties";
+import { useAuth } from "@/contexts/AuthContext";
+import { useListings } from "@/contexts/ListingsContext";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const Index = () => {
-  const featured = properties.filter((p) => p.available).slice(0, 3);
+  const { isLoggedIn } = useAuth();
+  const { approvedListings } = useListings();
+  const featured = approvedListings.filter((p) => p.available).slice(0, 3);
 
   return (
     <div className="min-h-screen">
@@ -30,15 +33,31 @@ const Index = () => {
             HUNT simplifies house hunting in Kenya. Browse verified listings with real-time availability, utility details, and direct landlord contacts.
           </p>
           <div className="flex animate-fade-in-up justify-center gap-4 [animation-delay:0.4s]">
-            <Button asChild size="lg" className="gap-2">
-              <Link to="/listings">
-                <Search className="h-4 w-4" />
-                Browse Listings
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20">
-              <Link to="/dashboard">List Your Property</Link>
-            </Button>
+            {isLoggedIn ? (
+              <>
+                <Button asChild size="lg" className="gap-2">
+                  <Link to="/listings">
+                    <Search className="h-4 w-4" />
+                    Browse Listings
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20">
+                  <Link to="/dashboard">List Your Property</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild size="lg" className="gap-2">
+                  <Link to="/signup">
+                    <UserPlus className="h-4 w-4" />
+                    Sign Up to Browse
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20">
+                  <Link to="/login">I Have an Account</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -67,22 +86,34 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Listings */}
-      <section className="bg-secondary/30 py-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 flex items-end justify-between">
-            <h2 className="font-display text-3xl font-bold">Featured Listings</h2>
-            <Link to="/listings" className="text-sm font-medium text-primary hover:underline">
-              View all →
-            </Link>
+      {/* Featured Listings — only for logged-in users */}
+      {isLoggedIn ? (
+        <section className="bg-secondary/30 py-16">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 flex items-end justify-between">
+              <h2 className="font-display text-3xl font-bold">Featured Listings</h2>
+              <Link to="/listings" className="text-sm font-medium text-primary hover:underline">
+                View all →
+              </Link>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((p) => (
+                <PropertyCard key={p.id} property={p} />
+              ))}
+            </div>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((p) => (
-              <PropertyCard key={p.id} property={p} />
-            ))}
+        </section>
+      ) : (
+        <section className="bg-secondary/30 py-16">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="mb-4 font-display text-3xl font-bold">Ready to Find Your Home?</h2>
+            <p className="mb-6 text-muted-foreground">Create a free account to browse all verified listings.</p>
+            <Button asChild size="lg">
+              <Link to="/signup">Get Started</Link>
+            </Button>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <Footer />
     </div>
