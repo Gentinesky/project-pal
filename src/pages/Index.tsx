@@ -1,14 +1,17 @@
 import { Link } from "react-router-dom";
-import { Search, MapPin, Shield, Clock } from "lucide-react";
+import { Search, MapPin, Shield, Clock, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
-import { properties } from "@/data/properties";
+import { useAuth } from "@/contexts/AuthContext";
+import { useListings } from "@/contexts/ListingsContext";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const Index = () => {
-  const featured = properties.filter((p) => p.available).slice(0, 3);
+  const { isLoggedIn } = useAuth();
+  const { approvedListings } = useListings();
+  const featured = approvedListings.filter((p) => p.available).slice(0, 3);
 
   return (
     <div className="min-h-screen">
