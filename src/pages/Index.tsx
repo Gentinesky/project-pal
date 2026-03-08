@@ -33,15 +33,31 @@ const Index = () => {
             HUNT simplifies house hunting in Kenya. Browse verified listings with real-time availability, utility details, and direct landlord contacts.
           </p>
           <div className="flex animate-fade-in-up justify-center gap-4 [animation-delay:0.4s]">
-            <Button asChild size="lg" className="gap-2">
-              <Link to="/listings">
-                <Search className="h-4 w-4" />
-                Browse Listings
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20">
-              <Link to="/dashboard">List Your Property</Link>
-            </Button>
+            {isLoggedIn ? (
+              <>
+                <Button asChild size="lg" className="gap-2">
+                  <Link to="/listings">
+                    <Search className="h-4 w-4" />
+                    Browse Listings
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20">
+                  <Link to="/dashboard">List Your Property</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild size="lg" className="gap-2">
+                  <Link to="/signup">
+                    <UserPlus className="h-4 w-4" />
+                    Sign Up to Browse
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground/20">
+                  <Link to="/login">I Have an Account</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </section>
