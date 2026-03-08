@@ -3,23 +3,24 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import SearchFilters from "@/components/SearchFilters";
-import { properties } from "@/data/properties";
+import { useListings } from "@/contexts/ListingsContext";
 
 const Listings = () => {
+  const { approvedListings } = useListings();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [selectedType, setSelectedType] = useState("All Types");
   const [maxPrice, setMaxPrice] = useState("");
 
   const filtered = useMemo(() => {
-    return properties.filter((p) => {
+    return approvedListings.filter((p) => {
       if (searchQuery && !p.title.toLowerCase().includes(searchQuery.toLowerCase()) && !p.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (selectedLocation !== "All Locations" && p.area !== selectedLocation) return false;
       if (selectedType !== "All Types" && p.type !== selectedType) return false;
       if (maxPrice && p.price > Number(maxPrice)) return false;
       return true;
     });
-  }, [searchQuery, selectedLocation, selectedType, maxPrice]);
+  }, [approvedListings, searchQuery, selectedLocation, selectedType, maxPrice]);
 
   return (
     <div className="min-h-screen">

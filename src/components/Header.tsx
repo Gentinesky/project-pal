@@ -1,17 +1,26 @@
-import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Plus, Menu, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Home, Search, Plus, Menu, X, LogIn, LogOut, Shield, User } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAdmin, isLoggedIn, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const links = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/listings", label: "Find a House", icon: Search },
-    { to: "/dashboard", label: "List Property", icon: Plus },
-  ];
+    { to: "/", label: "Home", icon: Home, show: true },
+    { to: "/listings", label: "Find a House", icon: Search, show: true },
+    { to: "/dashboard", label: "List Property", icon: Plus, show: isLoggedIn && user?.role === "landlord" },
+    { to: "/admin", label: "Admin Panel", icon: Shield, show: isAdmin },
+  ].filter((l) => l.show);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
@@ -39,15 +48,31 @@ const Header = () => {
               {link.label}
             </Link>
           ))}
+
+          {isLoggedIn ? (
+            <div className="ml-2 flex items-center gap-2">
+              <span className="flex items-center gap-1 rounded-lg bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground">
+                <User className="h-3.5 w-3.5" />
+                {user?.name}
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1 text-muted-foreground">
+                <LogOut className="h-4 w-4" /> Logout
+              </Button>
+            </div>
+          ) : (
+            <div className="ml-2 flex items-center gap-1">
+              <Button asChild variant="ghost" size="sm" className="gap-1">
+                <Link to="/login"><LogIn className="h-4 w-4" /> Login</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/signup">Sign Up</Link>
+              </Button>
+            </div>
+          )}
         </nav>
 
         {/* Mobile menu button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
+        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
       </div>
@@ -61,15 +86,27 @@ const Header = () => {
               to={link.to}
               onClick={() => setMenuOpen(false)}
               className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium ${
-                location.pathname === link.to
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground"
+                location.pathname === link.to ? "bg-primary/10 text-primary" : "text-muted-foreground"
               }`}
             >
               <link.icon className="h-4 w-4" />
               {link.label}
             </Link>
           ))}
+          {isLoggedIn ? (
+            <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground">
+              <LogOut className="h-4 w-4" /> Logout ({user?.name})
+            </button>
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground">
+                <LogIn className="h-4 w-4" /> Login
+              </Link>
+              <Link to="/signup" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-primary">
+                Sign Up
+              </Link>
+            </>
+          )}
         </nav>
       )}
     </header>
