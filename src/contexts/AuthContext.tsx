@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  blocked?: boolean;
 }
 
 interface AuthContextType {
@@ -16,11 +17,12 @@ interface AuthContextType {
   logout: () => void;
   isAdmin: boolean;
   isLoggedIn: boolean;
+  allUsers: User[];
+  blockUser: (userId: string, blocked: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Simulated user store (frontend-only, resets on refresh)
 const DEMO_USERS: User[] = [
   { id: "admin-1", name: "Admin", email: "admin@hunt.co.ke", role: "admin" },
 ];
@@ -38,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     (email: string, password: string): boolean => {
       const found = users.find((u) => u.email === email);
       if (found && passwords[email] === password) {
+        if (found.blocked) return false;
         setUser(found);
         return true;
       }
@@ -60,6 +63,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => setUser(null), []);
 
+  const blockUser = useCallback((userId: string, blocked: boolean) => {
+    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, blocked } : u)));
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -69,6 +76,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         isAdmin: user?.role === "admin",
         isLoggedIn: !!user,
+        allUsers: users,
+        blockUser,
       }}
     >
       {children}
