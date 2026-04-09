@@ -20,7 +20,7 @@ interface BookingDialogProps {
 
 const BookingDialog = ({ propertyId, propertyTitle, available, price }: BookingDialogProps) => {
   const { user, isLoggedIn } = useAuth();
-  const { createBooking } = useListings();
+  const { createBooking, addPayment, markBookingPaid, sendSms } = useListings();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
