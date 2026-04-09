@@ -27,10 +27,6 @@ const TenantDashboard = () => {
   const myBookings = user ? getUserBookings(user.id) : [];
   const myPayments = user ? payments.filter((p) => p.userId === user.id) : [];
 
-  if (!isLoggedIn || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
   const filtered = useMemo(() => {
     return approvedListings.filter((p) => {
       if (searchQuery && !p.title.toLowerCase().includes(searchQuery.toLowerCase()) && !p.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -40,6 +36,10 @@ const TenantDashboard = () => {
       return true;
     });
   }, [approvedListings, searchQuery, selectedLocation, selectedType, maxPrice]);
+
+  if (!isLoggedIn || !user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const handleContactLandlord = (landlordName: string, landlordPhone: string, propertyTitle: string) => {
     sendSms(
