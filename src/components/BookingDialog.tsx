@@ -56,6 +56,7 @@ const BookingDialog = ({ propertyId, propertyTitle, available, price }: BookingD
     if (!user) return;
     createBooking({
       propertyId,
+      propertyTitle,
       userId: user.id,
       userName: user.name,
       userEmail: user.email,

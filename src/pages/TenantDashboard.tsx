@@ -15,7 +15,7 @@ import { Navigate } from "react-router-dom";
 
 const TenantDashboard = () => {
   const { user, isLoggedIn } = useAuth();
-  const { approvedListings, bookings, payments, sendSms, getUserBookings } = useListings();
+  const { approvedListings, payments, sendSms, getUserBookings } = useListings();
   const { toast } = useToast();
 
   // Search & filter state
@@ -24,12 +24,12 @@ const TenantDashboard = () => {
   const [selectedType, setSelectedType] = useState("All Types");
   const [maxPrice, setMaxPrice] = useState("");
 
+  const myBookings = user ? getUserBookings(user.id) : [];
+  const myPayments = user ? payments.filter((p) => p.userId === user.id) : [];
+
   if (!isLoggedIn || !user) {
     return <Navigate to="/login" replace />;
   }
-
-  const myBookings = getUserBookings(user.id);
-  const myPayments = payments.filter((p) => p.userId === user.id);
 
   const filtered = useMemo(() => {
     return approvedListings.filter((p) => {
