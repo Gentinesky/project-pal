@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ImageUpload from "@/components/ImageUpload";
 import { useAuth } from "@/contexts/AuthContext";
 import { useListings } from "@/contexts/ListingsContext";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +33,7 @@ const LandlordDashboard = () => {
   const [waterCost, setWaterCost] = useState("");
   const [electricityType, setElectricityType] = useState<"prepaid" | "monthly">("prepaid");
   const [garbageCost, setGarbageCost] = useState("");
+  const [images, setImages] = useState<string[]>([]);
 
   if (!isLoggedIn || user?.role !== "landlord") {
     return <Navigate to="/login" replace />;
@@ -50,7 +52,7 @@ const LandlordDashboard = () => {
       price: Number(price),
       rooms: Number(rooms),
       available: true,
-      image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80",
+      image: images[0] || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80",
       landlordName: user.name,
       landlordPhone: phone,
       description,
@@ -66,7 +68,7 @@ const LandlordDashboard = () => {
     submitListing(listing, user.email);
     toast({ title: "Listing submitted!", description: "Your property is pending admin review before going live." });
     setShowForm(false);
-    setTitle(""); setLocation(""); setPrice(""); setRooms(""); setPhone(""); setDescription("");
+    setTitle(""); setLocation(""); setPrice(""); setRooms(""); setPhone(""); setDescription(""); setImages([]);
   };
 
   return (
@@ -124,6 +126,9 @@ const LandlordDashboard = () => {
               <div className="sm:col-span-2">
                 <Label>Description</Label>
                 <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the property, amenities, and surroundings..." rows={3} />
+              </div>
+              <div className="sm:col-span-2">
+                <ImageUpload images={images} onChange={setImages} maxImages={5} />
               </div>
               <div className="sm:col-span-2">
                 <h3 className="mb-2 font-display font-semibold">Utilities</h3>

@@ -106,7 +106,7 @@ const PropertyDetail = () => {
                 </div>
               </div>
 
-              <BookingDialog propertyId={property.id} propertyTitle={property.title} available={property.available} />
+              <BookingDialog propertyId={property.id} propertyTitle={property.title} available={property.available} price={property.price} />
             </div>
           </div>
         </div>
