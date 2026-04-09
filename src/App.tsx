@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Listings from "./pages/Listings";
 import PropertyDetail from "./pages/PropertyDetail";
 import LandlordDashboard from "./pages/LandlordDashboard";
+import TenantDashboard from "./pages/TenantDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/listings" element={<ProtectedRoute><Listings /></ProtectedRoute>} />
               <Route path="/property/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><LandlordDashboard /></ProtectedRoute>} />
+              <Route path="/tenant" element={<ProtectedRoute><TenantDashboard /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />

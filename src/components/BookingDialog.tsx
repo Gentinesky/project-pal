@@ -54,7 +54,7 @@ const BookingDialog = ({ propertyId, propertyTitle, available, price }: BookingD
 
   const handlePaymentComplete = () => {
     if (!user) return;
-    createBooking({
+    const bookingId = createBooking({
       propertyId,
       propertyTitle,
       userId: user.id,
@@ -63,6 +63,19 @@ const BookingDialog = ({ propertyId, propertyTitle, available, price }: BookingD
       userPhone: phone,
       message: message || `I'm interested in "${propertyTitle}"`,
     });
+    const txId = `SIM${Date.now().toString().slice(-8)}`;
+    addPayment({
+      bookingId,
+      propertyId,
+      propertyTitle,
+      userId: user.id,
+      userName: user.name,
+      userPhone: phone,
+      amount: depositAmount,
+      transactionId: txId,
+    });
+    markBookingPaid(bookingId);
+    sendSms(phone, `Booking confirmed for "${propertyTitle}". Tx: ${txId}. Amount: KSh ${depositAmount.toLocaleString()}`, "booking_notification");
     toast({ title: "Booking confirmed!", description: "Payment received. The landlord will be notified." });
     setShowPayment(false);
     setPhone("");
