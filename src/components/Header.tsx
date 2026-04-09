@@ -13,6 +13,7 @@ const Header = () => {
   const links = [
     { to: "/", label: "Home", icon: Home, show: true },
     { to: "/listings", label: "Find a House", icon: Search, show: true },
+    { to: "/tenant", label: "My Dashboard", icon: User, show: isLoggedIn && user?.role === "user" },
     { to: "/dashboard", label: "List Property", icon: Plus, show: isLoggedIn && user?.role === "landlord" },
     { to: "/admin", label: "Admin Panel", icon: Shield, show: isAdmin },
   ].filter((l) => l.show);
