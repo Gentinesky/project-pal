@@ -14,16 +14,244 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          property_id: string
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+          user_id: string
+          user_phone: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          property_id: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          user_id: string
+          user_phone: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          property_id?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          user_id?: string
+          user_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string
+          id: string
+          phone: string
+          property_id: string
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string
+          id?: string
+          phone: string
+          property_id: string
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          id?: string
+          phone?: string
+          property_id?: string
+          transaction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          bathrooms: number
+          bedrooms: number
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          landlord_id: string
+          location: string
+          rent: number
+          status: Database["public"]["Enums"]["property_status"]
+          title: string
+          type: string
+          updated_at: string
+          utilities: string | null
+        }
+        Insert: {
+          bathrooms?: number
+          bedrooms?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          landlord_id: string
+          location: string
+          rent: number
+          status?: Database["public"]["Enums"]["property_status"]
+          title: string
+          type?: string
+          updated_at?: string
+          utilities?: string | null
+        }
+        Update: {
+          bathrooms?: number
+          bedrooms?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          landlord_id?: string
+          location?: string
+          rent?: number
+          status?: Database["public"]["Enums"]["property_status"]
+          title?: string
+          type?: string
+          updated_at?: string
+          utilities?: string | null
+        }
+        Relationships: []
+      }
+      sms_logs: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          recipient: string
+          status: Database["public"]["Enums"]["sms_status"]
+          type: Database["public"]["Enums"]["sms_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          recipient: string
+          status?: Database["public"]["Enums"]["sms_status"]
+          type: Database["public"]["Enums"]["sms_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          recipient?: string
+          status?: Database["public"]["Enums"]["sms_status"]
+          type?: Database["public"]["Enums"]["sms_type"]
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "landlord" | "user"
+      booking_status: "pending" | "confirmed" | "cancelled"
+      payment_status: "unpaid" | "paid"
+      property_status: "pending" | "approved" | "rejected"
+      sms_status: "pending" | "delivered" | "failed"
+      sms_type: "booking_notification" | "contact_landlord"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +378,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "landlord", "user"],
+      booking_status: ["pending", "confirmed", "cancelled"],
+      payment_status: ["unpaid", "paid"],
+      property_status: ["pending", "approved", "rejected"],
+      sms_status: ["pending", "delivered", "failed"],
+      sms_type: ["booking_notification", "contact_landlord"],
+    },
   },
 } as const
