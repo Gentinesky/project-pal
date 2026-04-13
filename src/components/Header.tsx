@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Search, Plus, Menu, X, LogIn, LogOut, Shield, User } from "lucide-react";
-import { useState } from "react";
+import { Home, Search, Plus, Menu, X, LogIn, LogOut, Shield, User, Moon, Sun } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -9,6 +9,11 @@ const Header = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isLoggedIn, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+  }, [dark]);
 
   const links = [
     { to: "/", label: "Home", icon: Home, show: true },
@@ -72,10 +77,15 @@ const Header = () => {
           )}
         </nav>
 
-        {/* Mobile menu button */}
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+        {/* Dark mode toggle + Mobile menu button */}
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={() => setDark(!dark)} className="text-muted-foreground">
+            {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </div>
 
       {/* Mobile nav */}
