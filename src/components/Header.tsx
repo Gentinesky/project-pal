@@ -9,6 +9,11 @@ const Header = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isLoggedIn, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+  }, [dark]);
 
   const links = [
     { to: "/", label: "Home", icon: Home, show: true },
