@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle, XCircle, Clock, Eye, Users, CreditCard, MessageSquare, Pencil, Trash2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,13 +10,39 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useListings } from "@/contexts/ListingsContext";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DbUser {
+  id: string;
+  user_id: string;
+  full_name: string;
+  phone: string | null;
+  role?: string;
+}
 
 const AdminDashboard = () => {
-  const { user, isAdmin, allUsers, blockUser } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
   const { pendingListings, approvedListings, bookings, payments, smsLogs, approveListing, rejectListing, editListing, deleteListing } = useListings();
   const { toast } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ title: string; price: string; location: string }>({ title: "", price: "", location: "" });
+  const [allUsers, setAllUsers] = useState<DbUser[]>([]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchUsers = async () => {
+      const { data: profiles } = await supabase.from("profiles").select("*");
+      const { data: roles } = await supabase.from("user_roles").select("*");
+      if (profiles) {
+        const mapped = profiles.map((p) => ({
+          ...p,
+          role: roles?.find((r) => r.user_id === p.user_id)?.role ?? "user",
+        }));
+        setAllUsers(mapped);
+      }
+    };
+    fetchUsers();
+  }, [isAdmin]);
 
   if (!user || !isAdmin) {
     return <Navigate to="/login" replace />;
