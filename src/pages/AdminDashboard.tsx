@@ -44,6 +44,7 @@ const AdminDashboard = () => {
     fetchUsers();
   }, [isAdmin]);
 
+  if (loading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user || !isAdmin) {
     return <Navigate to="/login" replace />;
   }
