@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle, XCircle, Clock, Eye, Users, CreditCard, MessageSquare, Pencil, Trash2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,14 +10,41 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useListings } from "@/contexts/ListingsContext";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DbUser {
+  id: string;
+  user_id: string;
+  full_name: string;
+  phone: string | null;
+  role?: string;
+}
 
 const AdminDashboard = () => {
-  const { user, isAdmin, allUsers, blockUser } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
   const { pendingListings, approvedListings, bookings, payments, smsLogs, approveListing, rejectListing, editListing, deleteListing } = useListings();
   const { toast } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ title: string; price: string; location: string }>({ title: "", price: "", location: "" });
+  const [allUsers, setAllUsers] = useState<DbUser[]>([]);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchUsers = async () => {
+      const { data: profiles } = await supabase.from("profiles").select("*");
+      const { data: roles } = await supabase.from("user_roles").select("*");
+      if (profiles) {
+        const mapped = profiles.map((p) => ({
+          ...p,
+          role: roles?.find((r) => r.user_id === p.user_id)?.role ?? "user",
+        }));
+        setAllUsers(mapped);
+      }
+    };
+    fetchUsers();
+  }, [isAdmin]);
+
+  if (loading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user || !isAdmin) {
     return <Navigate to="/login" replace />;
   }
@@ -214,25 +241,12 @@ const AdminDashboard = () => {
               {allUsers.map((u) => (
                 <div key={u.id} className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-display font-bold text-primary">
-                    {u.name.charAt(0)}
+                    {u.full_name.charAt(0)}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">{u.name} {u.blocked && <span className="text-destructive text-xs">(Blocked)</span>}</p>
-                    <p className="text-sm text-muted-foreground">{u.email} · {u.role}</p>
+                    <p className="font-medium">{u.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{u.phone ?? "No phone"} · {u.role}</p>
                   </div>
-                  {u.role !== "admin" && (
-                    <Button
-                      size="sm"
-                      variant={u.blocked ? "outline" : "destructive"}
-                      onClick={() => {
-                        blockUser(u.id, !u.blocked);
-                        toast({ title: u.blocked ? "User unblocked" : "User blocked" });
-                      }}
-                      className="gap-1"
-                    >
-                      <Ban className="h-3 w-3" /> {u.blocked ? "Unblock" : "Block"}
-                    </Button>
-                  )}
                 </div>
               ))}
             </div>
