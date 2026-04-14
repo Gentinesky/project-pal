@@ -241,25 +241,12 @@ const AdminDashboard = () => {
               {allUsers.map((u) => (
                 <div key={u.id} className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-display font-bold text-primary">
-                    {u.name.charAt(0)}
+                    {u.full_name.charAt(0)}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">{u.name} {u.blocked && <span className="text-destructive text-xs">(Blocked)</span>}</p>
-                    <p className="text-sm text-muted-foreground">{u.email} · {u.role}</p>
+                    <p className="font-medium">{u.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{u.phone ?? "No phone"} · {u.role}</p>
                   </div>
-                  {u.role !== "admin" && (
-                    <Button
-                      size="sm"
-                      variant={u.blocked ? "outline" : "destructive"}
-                      onClick={() => {
-                        blockUser(u.id, !u.blocked);
-                        toast({ title: u.blocked ? "User unblocked" : "User blocked" });
-                      }}
-                      className="gap-1"
-                    >
-                      <Ban className="h-3 w-3" /> {u.blocked ? "Unblock" : "Block"}
-                    </Button>
-                  )}
                 </div>
               ))}
             </div>
