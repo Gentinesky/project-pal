@@ -1,83 +1,111 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { User as SupaUser, Session } from "@supabase/supabase-js";
 
 export type UserRole = "user" | "admin" | "landlord";
 
-export interface User {
+export interface AppUser {
   id: string;
-  name: string;
   email: string;
+  name: string;
   role: UserRole;
-  blocked?: boolean;
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => boolean;
-  signup: (name: string, email: string, password: string, role: UserRole) => boolean;
-  logout: () => void;
+  user: AppUser | null;
+  session: Session | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<string | null>;
+  signup: (name: string, email: string, password: string, role: UserRole) => Promise<string | null>;
+  logout: () => Promise<void>;
   isAdmin: boolean;
   isLoggedIn: boolean;
-  allUsers: User[];
-  blockUser: (userId: string, blocked: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const DEMO_USERS: User[] = [
-  { id: "admin-1", name: "Admin", email: "admin@hunt.co.ke", role: "admin" },
-];
+async function fetchRole(userId: string): Promise<UserRole> {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .single();
+  return (data?.role as UserRole) ?? "user";
+}
 
-const DEMO_PASSWORDS: Record<string, string> = {
-  "admin@hunt.co.ke": "admin123",
-};
+async function buildAppUser(su: SupaUser): Promise<AppUser> {
+  const role = await fetchRole(su.id);
+  return {
+    id: su.id,
+    email: su.email ?? "",
+    name: su.user_metadata?.full_name ?? su.email ?? "",
+    role,
+  };
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>(DEMO_USERS);
-  const [passwords, setPasswords] = useState<Record<string, string>>(DEMO_PASSWORDS);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = useCallback(
-    (email: string, password: string): boolean => {
-      const found = users.find((u) => u.email === email);
-      if (found && passwords[email] === password) {
-        if (found.blocked) return false;
-        setUser(found);
-        return true;
+  useEffect(() => {
+    // Listen first, then get session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, sess) => {
+      setSession(sess);
+      if (sess?.user) {
+        const appUser = await buildAppUser(sess.user);
+        setUser(appUser);
+      } else {
+        setUser(null);
       }
-      return false;
-    },
-    [users, passwords]
-  );
+      setLoading(false);
+    });
 
-  const signup = useCallback(
-    (name: string, email: string, password: string, role: UserRole): boolean => {
-      if (users.find((u) => u.email === email)) return false;
-      const newUser: User = { id: `user-${Date.now()}`, name, email, role };
-      setUsers((prev) => [...prev, newUser]);
-      setPasswords((prev) => ({ ...prev, [email]: password }));
-      setUser(newUser);
-      return true;
-    },
-    [users]
-  );
+    supabase.auth.getSession().then(async ({ data: { session: sess } }) => {
+      setSession(sess);
+      if (sess?.user) {
+        const appUser = await buildAppUser(sess.user);
+        setUser(appUser);
+      }
+      setLoading(false);
+    });
 
-  const logout = useCallback(() => setUser(null), []);
+    return () => subscription.unsubscribe();
+  }, []);
 
-  const blockUser = useCallback((userId: string, blocked: boolean) => {
-    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, blocked } : u)));
+  const login = useCallback(async (email: string, password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error ? error.message : null;
+  }, []);
+
+  const signup = useCallback(async (name: string, email: string, password: string, role: UserRole): Promise<string | null> => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name, role },
+      },
+    });
+    return error ? error.message : null;
+  }, []);
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        session,
+        loading,
         login,
         signup,
         logout,
         isAdmin: user?.role === "admin",
         isLoggedIn: !!user,
-        allUsers: users,
-        blockUser,
       }}
     >
       {children}
