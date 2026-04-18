@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Eye } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,16 +12,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ImageUpload from "@/components/ImageUpload";
 import { useAuth } from "@/contexts/AuthContext";
-import { useListings } from "@/contexts/ListingsContext";
+import { useListings, type Property } from "@/contexts/ListingsContext";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
-import type { Property } from "@/data/properties";
 
 const LandlordDashboard = () => {
-  const { user, isLoggedIn } = useAuth();
-  const { pendingListings, bookings, smsLogs, submitListing } = useListings();
+  const { user, isLoggedIn, loading: authLoading } = useAuth();
+  const { allProperties, bookings, submitListing } = useListings();
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -37,21 +37,19 @@ const LandlordDashboard = () => {
   const [garbageCost, setGarbageCost] = useState("");
   const [images, setImages] = useState<string[]>([]);
 
+  if (authLoading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
   if (!isLoggedIn || user?.role !== "landlord") {
     return <Navigate to="/login" replace />;
   }
 
-  const myPending = pendingListings.filter((l) => l.submittedBy === user.email);
-  const myBookings = bookings.filter((b) => {
-    // Find bookings for properties submitted by this landlord
-    return myPending.some((p) => p.status === "approved" && b.propertyTitle.includes(p.title));
-  });
-  const mySmsLogs = smsLogs.filter((s) => s.to === user.email || s.message.includes(user.name));
+  const myPending = allProperties.filter((l) => l.landlordId === user.id);
+  const myPropertyIds = new Set(myPending.map((p) => p.id));
+  const myBookings = bookings.filter((b) => myPropertyIds.has(b.propertyId));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const listing: Property = {
-      id: "",
+    setSubmitting(true);
+    const id = await submitListing({
       title,
       type,
       location,
@@ -60,6 +58,7 @@ const LandlordDashboard = () => {
       rooms: Number(rooms),
       available: true,
       image: images[0] || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80",
+      images,
       landlordName: user.name,
       landlordPhone: phone,
       description,
@@ -70,9 +69,12 @@ const LandlordDashboard = () => {
         wifi: { available: wifi },
         garbage: { cost: Number(garbageCost) || 0 },
       },
-      postedDate: new Date().toISOString().split("T")[0],
-    };
-    submitListing(listing, user.email);
+    });
+    setSubmitting(false);
+    if (!id) {
+      toast({ title: "Submission failed", description: "Please try again.", variant: "destructive" });
+      return;
+    }
     toast({ title: "Listing submitted!", description: "Your property is pending admin review." });
     setShowForm(false);
     setTitle(""); setLocation(""); setPrice(""); setRooms(""); setPhone(""); setDescription(""); setImages([]);

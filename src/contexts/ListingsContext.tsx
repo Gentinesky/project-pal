@@ -455,7 +455,7 @@ export const ListingsProvider = ({ children }: { children: ReactNode }) => {
       id: string,
       updates: { title?: string; price?: number; location?: string }
     ) => {
-      const payload: Record<string, unknown> = {};
+      const payload: { title?: string; rent?: number; location?: string } = {};
       if (updates.title !== undefined) payload.title = updates.title;
       if (updates.price !== undefined) payload.rent = updates.price;
       if (updates.location !== undefined) payload.location = updates.location;
