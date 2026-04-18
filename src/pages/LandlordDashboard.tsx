@@ -168,7 +168,7 @@ const LandlordDashboard = () => {
                 </div>
               </div>
             </div>
-            <Button type="submit" className="mt-4">Submit for Review</Button>
+            <Button type="submit" className="mt-4" disabled={submitting}>{submitting ? "Submitting..." : "Submit for Review"}</Button>
           </form>
         )}
 

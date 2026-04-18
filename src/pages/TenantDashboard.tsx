@@ -14,8 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 
 const TenantDashboard = () => {
-  const { user, isLoggedIn } = useAuth();
-  const { approvedListings, payments, sendSms, getUserBookings } = useListings();
+  const { user, isLoggedIn, loading } = useAuth();
+  const { approvedListings, payments, bookings, sendSms } = useListings();
   const { toast } = useToast();
 
   // Search & filter state
@@ -24,7 +24,7 @@ const TenantDashboard = () => {
   const [selectedType, setSelectedType] = useState("All Types");
   const [maxPrice, setMaxPrice] = useState("");
 
-  const myBookings = user ? getUserBookings(user.id) : [];
+  const myBookings = user ? bookings.filter((b) => b.userId === user.id) : [];
   const myPayments = user ? payments.filter((p) => p.userId === user.id) : [];
 
   const filtered = useMemo(() => {
@@ -37,6 +37,7 @@ const TenantDashboard = () => {
     });
   }, [approvedListings, searchQuery, selectedLocation, selectedType, maxPrice]);
 
+  if (loading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
   if (!isLoggedIn || !user) {
     return <Navigate to="/login" replace />;
   }
