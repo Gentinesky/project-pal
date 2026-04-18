@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useListings } from "@/contexts/ListingsContext";
 import { useToast } from "@/hooks/use-toast";
@@ -16,17 +22,29 @@ interface BookingDialogProps {
   propertyTitle: string;
   available: boolean;
   price: number;
+  landlordPhone: string;
+  landlordName: string;
 }
 
-const BookingDialog = ({ propertyId, propertyTitle, available, price }: BookingDialogProps) => {
+const BookingDialog = ({
+  propertyId,
+  propertyTitle,
+  available,
+  price,
+  landlordPhone,
+  landlordName,
+}: BookingDialogProps) => {
   const { user, isLoggedIn } = useAuth();
-  const { createBooking, addPayment, markBookingPaid, sendSms } = useListings();
+  const { createBooking, payForBooking, sendSms } = useListings();
   const { toast } = useToast();
   const navigate = useNavigate();
+
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [showPayment, setShowPayment] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!available) {
     return (
@@ -38,52 +56,71 @@ const BookingDialog = ({ propertyId, propertyTitle, available, price }: BookingD
 
   const handleClick = () => {
     if (!isLoggedIn) {
-      toast({ title: "Login required", description: "Please sign in to book a property.", variant: "destructive" });
+      toast({
+        title: "Login required",
+        description: "Please sign in to book a property.",
+        variant: "destructive",
+      });
       navigate("/login");
       return;
     }
     setOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Close booking dialog and open payment
+    if (!user) return;
+    setSubmitting(true);
+    const id = await createBooking({
+      propertyId,
+      propertyTitle,
+      userPhone: phone,
+      message: message || `I'm interested in "${propertyTitle}"`,
+    });
+    setSubmitting(false);
+    if (!id) {
+      toast({
+        title: "Booking failed",
+        description: "Could not create booking. Try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setBookingId(id);
     setOpen(false);
     setShowPayment(true);
   };
 
-  const handlePaymentComplete = () => {
-    if (!user) return;
-    const bookingId = createBooking({
-      propertyId,
-      propertyTitle,
-      userId: user.id,
-      userName: user.name,
-      userEmail: user.email,
-      userPhone: phone,
-      message: message || `I'm interested in "${propertyTitle}"`,
-    });
-    const txId = `SIM${Date.now().toString().slice(-8)}`;
-    addPayment({
+  const handlePay = async (mpesaPhone: string) => {
+    if (!bookingId) return { ok: false, error: "No booking" };
+    const result = await payForBooking({
       bookingId,
       propertyId,
       propertyTitle,
-      userId: user.id,
-      userName: user.name,
-      userPhone: phone,
-      amount: depositAmount,
-      transactionId: txId,
+      phone: mpesaPhone,
+      amount: price,
     });
-    markBookingPaid(bookingId);
-    sendSms(phone, `Booking confirmed for "${propertyTitle}". Tx: ${txId}. Amount: KSh ${depositAmount.toLocaleString()}`, "booking_notification");
-    toast({ title: "Booking confirmed!", description: "Payment received. The landlord will be notified." });
+    if (result.ok) {
+      // Notify landlord via SMS
+      await sendSms(
+        landlordPhone,
+        `New booking for "${propertyTitle}" by ${user?.name}. Phone: ${phone}. Deposit paid: KSh ${price.toLocaleString()}`,
+        "booking_notification"
+      );
+    }
+    return result;
+  };
+
+  const handleComplete = () => {
+    toast({
+      title: "Booking confirmed!",
+      description: `${landlordName} has been notified.`,
+    });
     setShowPayment(false);
     setPhone("");
     setMessage("");
+    setBookingId(null);
   };
-
-  // Deposit = 1 month rent
-  const depositAmount = price;
 
   return (
     <>
@@ -96,7 +133,9 @@ const BookingDialog = ({ propertyId, propertyTitle, available, price }: BookingD
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="font-display">Book: {propertyTitle}</DialogTitle>
+            <DialogTitle className="font-display">
+              Book: {propertyTitle}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -109,17 +148,35 @@ const BookingDialog = ({ propertyId, propertyTitle, available, price }: BookingD
             </div>
             <div>
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+254 7XX XXX XXX" required />
+              <Input
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+254 7XX XXX XXX"
+                required
+              />
             </div>
             <div>
               <Label htmlFor="message">Message (optional)</Label>
-              <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="When would you like to view the property?" rows={3} />
+              <Textarea
+                id="message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="When would you like to view the property?"
+                rows={3}
+              />
             </div>
             <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm">
-              <p className="text-muted-foreground">Booking deposit (1 month rent):</p>
-              <p className="font-display text-lg font-bold text-primary">KSh {depositAmount.toLocaleString()}</p>
+              <p className="text-muted-foreground">
+                Booking deposit (1 month rent):
+              </p>
+              <p className="font-display text-lg font-bold text-primary">
+                KSh {price.toLocaleString()}
+              </p>
             </div>
-            <Button type="submit" className="w-full">Proceed to Payment</Button>
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? "Creating booking..." : "Proceed to Payment"}
+            </Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -127,9 +184,10 @@ const BookingDialog = ({ propertyId, propertyTitle, available, price }: BookingD
       <MpesaPaymentDialog
         open={showPayment}
         onOpenChange={setShowPayment}
-        amount={depositAmount}
+        amount={price}
         propertyTitle={propertyTitle}
-        onPaymentComplete={handlePaymentComplete}
+        onPay={handlePay}
+        onComplete={handleComplete}
       />
     </>
   );
