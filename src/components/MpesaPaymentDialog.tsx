@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Phone, CheckCircle, Loader2 } from "lucide-react";
+import { Phone, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,38 +15,50 @@ interface MpesaPaymentDialogProps {
   onOpenChange: (open: boolean) => void;
   amount: number;
   propertyTitle: string;
-  onPaymentComplete: () => void;
+  onPay: (
+    phone: string
+  ) => Promise<{ ok: boolean; transactionId?: string; mode?: string; error?: string }>;
+  onComplete: () => void;
 }
 
-type PaymentStep = "input" | "processing" | "success";
+type Step = "input" | "processing" | "success" | "error";
 
 const MpesaPaymentDialog = ({
   open,
   onOpenChange,
   amount,
   propertyTitle,
-  onPaymentComplete,
+  onPay,
+  onComplete,
 }: MpesaPaymentDialogProps) => {
   const [phone, setPhone] = useState("");
-  const [step, setStep] = useState<PaymentStep>("input");
+  const [step, setStep] = useState<Step>("input");
+  const [txId, setTxId] = useState("");
+  const [mode, setMode] = useState<string>("");
+  const [errMsg, setErrMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStep("processing");
-    // Simulate STK push + confirmation delay
-    setTimeout(() => {
+    const result = await onPay(phone);
+    if (result.ok) {
+      setTxId(result.transactionId ?? "");
+      setMode(result.mode ?? "");
       setStep("success");
-    }, 3000);
+    } else {
+      setErrMsg(result.error ?? "Payment failed");
+      setStep("error");
+    }
   };
 
   const handleClose = () => {
-    if (step === "success") {
-      onPaymentComplete();
-    }
+    if (step === "success") onComplete();
     onOpenChange(false);
     setTimeout(() => {
       setStep("input");
       setPhone("");
+      setTxId("");
+      setErrMsg("");
     }, 300);
   };
 
@@ -78,7 +90,7 @@ const MpesaPaymentDialog = ({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="e.g. 0712345678"
-                pattern="^(07|01|2547|2541)\d{7,8}$"
+                pattern="^(07|01|2547|2541|\+2547|\+2541)\d{7,8}$"
                 required
               />
               <p className="mt-1 text-xs text-muted-foreground">
@@ -107,16 +119,39 @@ const MpesaPaymentDialog = ({
           <div className="flex flex-col items-center gap-4 py-8 text-center">
             <CheckCircle className="h-12 w-12 text-success" />
             <div>
-              <p className="font-display text-lg font-semibold">Payment Successful!</p>
+              <p className="font-display text-lg font-semibold">
+                Payment Successful!
+              </p>
               <p className="text-sm text-muted-foreground">
-                Transaction ID: <span className="font-mono font-medium">SIM{Date.now().toString().slice(-8)}</span>
+                Transaction ID:{" "}
+                <span className="font-mono font-medium">{txId}</span>
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 KSh {amount.toLocaleString()} paid via M-Pesa
               </p>
+              {mode === "simulated" && (
+                <p className="mt-2 text-xs text-accent">
+                  (Simulated — add Daraja API keys to enable real payments)
+                </p>
+              )}
             </div>
             <Button onClick={handleClose} className="w-full">
               Done
+            </Button>
+          </div>
+        )}
+
+        {step === "error" && (
+          <div className="flex flex-col items-center gap-4 py-8 text-center">
+            <AlertCircle className="h-12 w-12 text-destructive" />
+            <div>
+              <p className="font-display text-lg font-semibold">
+                Payment Failed
+              </p>
+              <p className="text-sm text-muted-foreground">{errMsg}</p>
+            </div>
+            <Button onClick={() => setStep("input")} variant="outline" className="w-full">
+              Try Again
             </Button>
           </div>
         )}

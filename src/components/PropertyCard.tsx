@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { MapPin, Bed, Wifi, Zap, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Property } from "@/data/properties";
+import type { Property } from "@/contexts/ListingsContext";
 
 const PropertyCard = ({ property }: { property: Property }) => {
   const typeLabels: Record<string, string> = {
