@@ -234,31 +234,6 @@ const LandlordDashboard = () => {
               </div>
             )}
           </TabsContent>
-
-          {/* SMS Notifications */}
-          <TabsContent value="notifications" className="space-y-4">
-            <h2 className="font-display text-xl font-semibold">SMS Notifications (Gava Connect)</h2>
-            {mySmsLogs.length === 0 ? (
-              <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
-                No SMS notifications yet. You'll receive SMS when someone books your property.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {mySmsLogs.map((s) => (
-                  <div key={s.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
-                    <div className="flex-1">
-                      <p className="text-sm">{s.message}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(s.createdAt).toLocaleString()}</p>
-                    </div>
-                    <Badge className={s.status === "delivered" ? "bg-success/10 text-success border-0" : "bg-destructive/10 text-destructive border-0"}>
-                      {s.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
       </main>
       <Footer />
     </div>

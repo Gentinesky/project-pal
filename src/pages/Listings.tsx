@@ -6,7 +6,7 @@ import SearchFilters from "@/components/SearchFilters";
 import { useListings } from "@/contexts/ListingsContext";
 
 const Listings = () => {
-  const { approvedListings } = useListings();
+  const { approvedListings, loading } = useListings();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [selectedType, setSelectedType] = useState("All Types");
@@ -38,20 +38,20 @@ const Listings = () => {
           onMaxPriceChange={setMaxPrice}
         />
         <p className="mt-4 mb-4 text-sm text-muted-foreground">
-          {filtered.length} {filtered.length === 1 ? "property" : "properties"} found
+          {loading ? "Loading..." : `${filtered.length} ${filtered.length === 1 ? "property" : "properties"} found`}
         </p>
-        {filtered.length > 0 ? (
+        {!loading && filtered.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((p) => (
               <PropertyCard key={p.id} property={p} />
             ))}
           </div>
-        ) : (
+        ) : !loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-lg font-medium text-muted-foreground">No properties match your filters.</p>
             <p className="text-sm text-muted-foreground">Try adjusting your search criteria.</p>
           </div>
-        )}
+        ) : null}
       </main>
       <Footer />
     </div>
