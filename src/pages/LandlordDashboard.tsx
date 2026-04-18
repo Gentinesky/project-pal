@@ -234,6 +234,7 @@ const LandlordDashboard = () => {
               </div>
             )}
           </TabsContent>
+        </Tabs>
       </main>
       <Footer />
     </div>
